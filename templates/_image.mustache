@@ -1,0 +1,12 @@
+<figure>
+  <img class="thumbnailImage" src="{{ src }}" />
+</figure>
+<figcaption>{{{ caption }}}</figcaption>
+{{# tags }}<a data-button="tag" href="#">{{ . }}</a> {{/ tags }}
+<button data-button="close">Close</button>
+{{# prev }}
+  <a href="{{ prev }}" data-button="detail">Prev</a>
+{{/ prev }}
+{{# next }}
+  <a href="{{ next }}" data-button="detail">Next</a>
+{{/ next }}

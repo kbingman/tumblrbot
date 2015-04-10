@@ -1,0 +1,78 @@
+package main
+
+import (
+  "encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
+
+// This is our type which matches the JSON object.
+type IpRecord struct {
+	// These two fields use the json: tag to specify which field they map to
+	CountryName string `json:"country_name"`
+	CountryCode string `json:"country_code"`
+	// These fields are mapped directly by name (note the different case)
+	City string
+	Ip   string
+	// As these fields can be nullable, we use a pointer to a string rather than a string
+	Lat *string
+	Lng *string
+}
+
+func main() {
+	// Note this example requires fmt in the list of imports
+	record, _ := GetIpRecord("198.252.206.16")
+	fmt.Printf("stackoverflow.com information:\n%v\n", record)
+	record, _ = GetIpRecord("184.72.186.1")
+	fmt.Printf("hostip.info information:\n%v\n", record)
+	record, _ = GetIpRecord("108.162.195.222")
+	fmt.Printf("codingcookies.com information:\n%v\n", record)
+}
+
+// This function fetch the content of a URL will return it as an
+// array of bytes if retrieved successfully.
+func getContent(url string) ([]byte, error) {
+	// Build the request
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	// Send the request via a client
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	// Defer the closing of the body
+	defer resp.Body.Close()
+	// Read the content into a byte array
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	// At this point we're done - simply return the bytes
+	return body, nil
+}
+
+// This function will attempt to get the IP record for
+// a given IP. If no errors occur, it will return a pair
+// of the record and nil. If it was not successful, it will
+// return a pair of nil and the error.
+func GetIpRecord(ip string) (*IpRecord, error) {
+	// Fetch the JSON content for that given IP
+	content, err := getContent(
+		fmt.Sprintf("http://api.hostip.info/get_json.php?position=true&ip=%s", ip))
+	if err != nil {
+		// An error occurred while fetching the JSON
+		return nil, err
+	}
+	// Fill the record with the data from the JSON
+	var record IpRecord
+	err = json.Unmarshal(content, &record)
+	if err != nil {
+		// An error occurred while converting our JSON to an object
+		return nil, err
+	}
+	return &record, err
+}
